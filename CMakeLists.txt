@@ -5,7 +5,8 @@ cmake_minimum_required (VERSION 3.15)
 
 project ("TinyEngine")
 
+add_subdirectory(Src)
 	# 将源代码添加到此项目的可执行文件。
-add_executable (TinyEngine   "Src/TinyEngine.cpp" "Src/TinyEngine.h")
+#add_executable (TinyEngine   "Src/TinyEngine.cpp" "Src/TinyEngine.h")
 
 # TODO: 如有需要，请添加测试并安装目标。
