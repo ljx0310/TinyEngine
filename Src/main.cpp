@@ -8,6 +8,7 @@ constexpr double MY_PI = 3.1415926;
 
 Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 {
+	//TODO LookAt direction and Up Direction
     Eigen::Matrix4f view = Eigen::Matrix4f::Identity();
 
     Eigen::Matrix4f translate;
@@ -70,9 +71,10 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
 	Eigen::Matrix4f ortho_scale = Eigen::Matrix4f::Identity();
 	Eigen::Matrix4f persp2ortho = Eigen::Matrix4f::Identity();
 
-	float r, l, t, b, n = zNear, f = zFar;
+	// n and f are coordinate ,zNear and zFar are distance
+	float r, l, t, b, n = -zNear, f = -zFar;
 	float radian_fov = eye_fov * MY_PI / 180;
-	t = tan(radian_fov / 2) * n;
+	t = tan(radian_fov / 2) * zNear;
 	b = -t;
 	r = t * aspect_ratio;
 	l = -r;
@@ -81,6 +83,7 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
 		0, 1, 0, -(t + b) / 2,
 		0, 0, 0, -(n + f) / 2,
 		0, 0, 0, 1;
+
 	ortho_scale << 2 / (r - l), 0, 0, 0,
 		0, 2 / (t - b), 0, 0,
 		0, 0, 2 / (n - f), 0,
@@ -142,30 +145,43 @@ int main(int argc, const char** argv)
         return 0;
     }
 
-    while (key != 27) {
-        r.clear(rst::Buffers::Color | rst::Buffers::Depth);
+	while (key != 27) {
+		r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
-        //r.set_model(get_model_matrix(angle));
+		//r.set_model(get_model_matrix(angle));
 		r.set_model(get_rotation({ 0,0,1 }, angle));
-        r.set_view(get_view_matrix(eye_pos));
-        r.set_projection(get_projection_matrix(45, 1, 1, 10));
+		r.set_view(get_view_matrix(eye_pos));
+		r.set_projection(get_projection_matrix(45, 1, 1, 10));
 
-        r.draw(pos_id, ind_id, rst::Primitive::Triangle);
+		r.draw(pos_id, ind_id, rst::Primitive::Triangle);
 
-        cv::Mat image(700, 700, CV_32FC3, r.frame_buffer().data());
-        image.convertTo(image, CV_8UC3, 1.0f);
-        cv::imshow("image", image);
-        key = cv::waitKey(10);
+		cv::Mat image(700, 700, CV_32FC3, r.frame_buffer().data());
+		image.convertTo(image, CV_8UC3, 1.0f);
+		cv::imshow("image", image);
+		key = cv::waitKey(10);
 
-        std::cout << "frame count: " << frame_count++ << '\n';
+		std::cout << "frame count: " << frame_count++ << '\n';
 
-        if (key == 'a') {
-            angle += 1;
-        }
-        else if (key == 'd') {
-            angle -= 1;
-        }
-    }
+		float stride = 0.1f;
+		if (key == 'a') {
+			eye_pos[0] -= stride;
+		}
+		else if (key == 'd') {
+			eye_pos[0] += stride;
+		}
+		else if (key == 'w') {
+			eye_pos[2] -= stride;
+		}
+		else if (key == 's') {
+			eye_pos[2] += stride;
+		}
+		else if (key == 'q') {
+			eye_pos[1] -= stride;
+		}
+		else if (key == 'e') {
+			eye_pos[1] += stride;
+		}
+	}
 
     return 0;
 }
