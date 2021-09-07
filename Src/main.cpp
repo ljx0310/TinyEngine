@@ -21,60 +21,78 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 
 Eigen::Matrix4f get_model_matrix(float rotation_angle)
 {
-    Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+	Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
 
-    // Create the model matrix for rotating the triangle around the Z axis.
-    // Then return it.
+	// Create the model matrix for rotating the triangle around the Z axis.
+	// Then return it.
 
-		float radian = rotation_angle / 180 * MY_PI;
+	float radian = rotation_angle / 180 * MY_PI;
 
-		model << cos(radian), -sin(radian), 0, 0,
-							sin(radian), cos(radian), 0, 0,
-							0, 0, 1, 0, 
-							0, 0, 0, 1;
+	model << cos(radian), -sin(radian), 0, 0,
+		sin(radian), cos(radian), 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1;
 
-    return model;
+	return model;
+}
+
+// Use Rodrigues' Rotation Formula to get rotation matrix
+Eigen::Matrix4f get_rotation(Vector3f axis, float angle)
+{
+	Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+	float radian = angle / 180 * MY_PI;
+	Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
+	Eigen::Matrix3f tmp = Eigen::Matrix3f::Identity();
+	Eigen::Matrix3f Rodrigues;
+	
+	// Rodrigues' Rotation Formula
+	tmp << 0, -axis[2], axis[1], axis[2], 0, -axis[0], -axis[1], axis[0], 0;
+	Rodrigues = cos(radian) * I + (1 - cos(radian)) * axis * axis.adjoint() + sin(radian) * tmp;
+	model << Rodrigues(0, 0), Rodrigues(0, 1), Rodrigues(0, 2), 0,
+		Rodrigues(1, 0), Rodrigues(1, 1), Rodrigues(1, 2), 0,
+		Rodrigues(2, 0), Rodrigues(2, 1), Rodrigues(2, 2), 0,
+		0, 0, 0, 1;
+	return model;
 }
 
 Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
-                                      float zNear, float zFar)
+	float zNear, float zFar)
 {
-    // Students will implement this function
+	// Students will implement this function
 
-    Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
+	Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
 
-    // TODO: Implement this function
-    // Create the projection matrix for the given parameters.
-    // Then return it.
+	// TODO: Implement this function
+	// Create the projection matrix for the given parameters.
+	// Then return it.
 
-		Eigen::Matrix4f ortho_trans = Eigen::Matrix4f::Identity();
-		Eigen::Matrix4f ortho_scale = Eigen::Matrix4f::Identity();
-		Eigen::Matrix4f persp2ortho = Eigen::Matrix4f::Identity();
+	Eigen::Matrix4f ortho_trans = Eigen::Matrix4f::Identity();
+	Eigen::Matrix4f ortho_scale = Eigen::Matrix4f::Identity();
+	Eigen::Matrix4f persp2ortho = Eigen::Matrix4f::Identity();
 
-		float r, l, t, b, n=zNear, f=zFar;
-		float radian_fov = eye_fov * MY_PI / 180;
-		t = tan(radian_fov / 2) * n;
-		b = -t;
-		r = t * aspect_ratio;
-		l = -r;
+	float r, l, t, b, n = zNear, f = zFar;
+	float radian_fov = eye_fov * MY_PI / 180;
+	t = tan(radian_fov / 2) * n;
+	b = -t;
+	r = t * aspect_ratio;
+	l = -r;
 
-		ortho_trans << 1, 0, 0, -(r + l) / 2,
-									 0, 1, 0, -(t + b) / 2,
-									 0, 0, 0, -(n + f) / 2,
-									 0, 0, 0, 1;
-		ortho_scale << 2/(r - l), 0, 0, 0,
-			 						 0, 2/(t - b) , 0, 0,
-				 					 0, 0, 2/(n - f) , 0,
-									 0, 0, 0, 1;
+	ortho_trans << 1, 0, 0, -(r + l) / 2,
+		0, 1, 0, -(t + b) / 2,
+		0, 0, 0, -(n + f) / 2,
+		0, 0, 0, 1;
+	ortho_scale << 2 / (r - l), 0, 0, 0,
+		0, 2 / (t - b), 0, 0,
+		0, 0, 2 / (n - f), 0,
+		0, 0, 0, 1;
 
-		persp2ortho << n, 0, 0, 0,
-									 0, n, 0, 0,
-									 0, 0, n-f, -n*f,
-									 0, 0, 1, 0;
-		projection = ortho_scale * ortho_trans * persp2ortho;
+	persp2ortho << n, 0, 0, 0,
+		0, n, 0, 0,
+		0, 0, n - f, -n * f,
+		0, 0, 1, 0;
+	projection = ortho_scale * ortho_trans * persp2ortho;
 
-
-    return projection;
+	return projection;
 }
 
 int main(int argc, const char** argv)
@@ -110,8 +128,9 @@ int main(int argc, const char** argv)
     if (command_line) {
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
-        r.set_model(get_model_matrix(angle));
-        r.set_view(get_view_matrix(eye_pos));
+        //r.set_model(get_model_matrix(angle));
+		r.set_model(get_rotation({ 1,0,0 }, angle));
+		r.set_view(get_view_matrix(eye_pos));
         r.set_projection(get_projection_matrix(45, 1, 0.1, 50));
 
         r.draw(pos_id, ind_id, rst::Primitive::Triangle);
@@ -126,7 +145,8 @@ int main(int argc, const char** argv)
     while (key != 27) {
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
-        r.set_model(get_model_matrix(angle));
+        //r.set_model(get_model_matrix(angle));
+		r.set_model(get_rotation({ 0,0,1 }, angle));
         r.set_view(get_view_matrix(eye_pos));
         r.set_projection(get_projection_matrix(45, 1, 1, 10));
 
