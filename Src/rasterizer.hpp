@@ -47,12 +47,18 @@ struct ind_buf_id
     int ind_id = 0;
 };
 
+struct col_buf_id
+{
+	int col_id = 0;
+};
+
 class rasterizer
 {
   public:
     rasterizer(int w, int h);
     pos_buf_id load_positions(const std::vector<Eigen::Vector3f>& positions);
     ind_buf_id load_indices(const std::vector<Eigen::Vector3i>& indices);
+	col_buf_id load_colors(const std::vector<Eigen::Vector3f>& colors);
 
     void set_model(const Eigen::Matrix4f& m);
     void set_view(const Eigen::Matrix4f& v);
@@ -62,13 +68,15 @@ class rasterizer
 
     void clear(Buffers buff);
 
-    void draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, Primitive type);
+    void draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf_id col_buffer, Primitive type);
 
     std::vector<Eigen::Vector3f>& frame_buffer() { return frame_buf; }
 
   private:
     void draw_line(Eigen::Vector3f begin, Eigen::Vector3f end);
     void rasterize_wireframe(const Triangle& t);
+	void rasterize_triangle(const Triangle& t);
+
 
   private:
     Eigen::Matrix4f model;
@@ -77,6 +85,7 @@ class rasterizer
 
     std::map<int, std::vector<Eigen::Vector3f>> pos_buf;
     std::map<int, std::vector<Eigen::Vector3i>> ind_buf;
+	std::map<int, std::vector<Eigen::Vector3f>> col_buf;
 
     std::vector<Eigen::Vector3f> frame_buf;
     std::vector<float> depth_buf;
